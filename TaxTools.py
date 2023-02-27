@@ -4,7 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import datetime as dt
 slash = '/'
-path = os.getcwd()
+path = os.path.dirname(__file__)
 class TaxTools():
     def get_csv_for_dataframe(tax_name,tax_year='2021/2022'):
         '''options for UK tax_name
@@ -23,11 +23,11 @@ class TaxTools():
                 '2022/2023'
         '''
         path = os.getcwd()
-        log_folder = path + '\\UK Tax Tables'
-        tax_table_log = pd.read_csv(log_folder + '\\tax_name_log.csv')
+        log_folder = os.path.join(path, 'UK Tax Tables')
+        tax_table_log = pd.read_csv(os.path.join(log_folder, 'tax_name_log.csv'))
         year = tax_table_log.loc[tax_table_log['tax name'] == tax_name, tax_year].item()
         tax = tax_table_log.loc[tax_table_log['tax name'] == tax_name, 'filename'].item()
-        file_path = log_folder + year + tax
+        file_path = os.path.join(log_folder, year + tax)
         a = pd.read_csv(file_path)
         return a
 
