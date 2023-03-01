@@ -4,7 +4,7 @@ import numpy as np
 import plotly.graph_objects as go
 import datetime as dt
 slash = '/'
-path = os.path.dirname(__file__)
+#path = os.getcwd()
 class TaxTools():
     def get_csv_for_dataframe(tax_name,tax_year='2021/2022'):
         '''options for UK tax_name
@@ -22,12 +22,12 @@ class TaxTools():
                 '2021/2022'
                 '2022/2023'
         '''
-        path = os.getcwd()
-        log_folder = os.path.join(path, 'UK Tax Tables')
-        tax_table_log = pd.read_csv(os.path.join(log_folder, 'tax_name_log.csv'))
+        path = os.path.dirname(__file__)
+        log_folder = path + '\\UK Tax Tables'
+        tax_table_log = pd.read_csv(log_folder + '\\tax_name_log.csv')
         year = tax_table_log.loc[tax_table_log['tax name'] == tax_name, tax_year].item()
         tax = tax_table_log.loc[tax_table_log['tax name'] == tax_name, 'filename'].item()
-        file_path = os.path.join(log_folder, year + tax)
+        file_path = log_folder + year + tax
         a = pd.read_csv(file_path)
         return a
 
@@ -55,8 +55,8 @@ class TaxTools():
         return a_total
 
     def marginalise(cash,table:pd.DataFrame):
-        a = create_table(table)
-        b = marginal(cash,a)
+        a = TaxTools.create_table(table)
+        b = TaxTools.marginal(cash,a)
         return(b)
 
     def replace_threshold_rates(threshold_table:pd.DataFrame,rates:pd.DataFrame):
@@ -67,6 +67,20 @@ class TaxTools():
 
     def interpret_single_df_value(df:pd.DataFrame):
         return int(df['value'])
+
+    def optimal_iterations(input_value):
+        x_min = 5
+        x_max = input_value/2
+        d = {}
+
+        for i in range(int(x_min),int(x_max)+1):
+            key = i
+            value = int((input_value/i) + i)
+            d[key] = value + int(input_value/i)
+
+        min_value = min(d.values())
+        min_key = min([k for k, v in d.items() if v == min_value])
+        return min_value
 
     #UK Tax Tools LEVEL 1
     def interpret_tax_code_allowance(tax_code):
@@ -84,8 +98,8 @@ class TaxTools():
         allowance_reduction = a.loc[1,'threshold min'] - tax_allowance
         a.loc[1,'threshold min'] = a.loc[1,'threshold min'] - allowance_reduction
         a.loc[2,'threshold min'] = a.loc[2,'threshold min'] - allowance_reduction
-        b = get_csv_for_dataframe('high income threshold',tax_year)
-        c = interpret_single_df_value(b)
+        b = TaxTools.get_csv_for_dataframe('high income threshold',tax_year)
+        c = TaxTools.interpret_single_df_value(b)
         if salary > c:
             change_range = c + 2 * tax_allowance
             d = {'numbers': list(range(c,change_range + 1,2))}
@@ -129,59 +143,59 @@ class TaxTools():
 
     #UK Tax Laws LEVEL 2
     def employee_ni(salary,tax_code,tax_year):
-        a = get_csv_for_dataframe('employee ni',tax_year)
-        b = interpret_tax_code_ni_band(tax_code)
-        c = get_csv_for_dataframe('employee ni bands',tax_year)
-        d = adjust_ni_band(a,c,b)
-        e = marginalise(salary,d)
+        a = TaxTools.get_csv_for_dataframe('employee ni',tax_year)
+        b = TaxTools.interpret_tax_code_ni_band(tax_code)
+        c = TaxTools.get_csv_for_dataframe('employee ni bands',tax_year)
+        d = TaxTools.adjust_ni_band(a,c,b)
+        e = TaxTools.marginalise(salary,d)
         return e
 
     def income_tax(salary,tax_code,tax_year):
-        a = get_csv_for_dataframe('income tax',tax_year)
-        b = interpret_tax_code_allowance(tax_code)
-        c = adjust_allowance(salary,b,a,tax_year)
-        d = marginalise(salary,c)
+        a = TaxTools.get_csv_for_dataframe('income tax',tax_year)
+        b = TaxTools.interpret_tax_code_allowance(tax_code)
+        c = TaxTools.adjust_allowance(salary,b,a,tax_year)
+        d = TaxTools.marginalise(salary,c)
         return d
 
     def corporate_ni(salary,tax_code,tax_year):
-        a = get_csv_for_dataframe('corporate ni',tax_year)
-        b = get_csv_for_dataframe('corporate ni bands',tax_year)
-        c = interpret_tax_code_ni_band(tax_code)
-        d = adjust_ni_band(a,b,c)
-        e = marginalise(salary,d)
+        a = TaxTools.get_csv_for_dataframe('corporate ni',tax_year)
+        b = TaxTools.get_csv_for_dataframe('corporate ni bands',tax_year)
+        c = TaxTools.interpret_tax_code_ni_band(tax_code)
+        d = TaxTools.adjust_ni_band(a,b,c)
+        e = TaxTools.marginalise(salary,d)
         return e
 
     def corporation_tax(gross_profit,tax_year):
-        a = get_csv_for_dataframe('corporation tax',tax_year)
-        b = marginalise(gross_profit,a)
+        a = TaxTools.get_csv_for_dataframe('corporation tax',tax_year)
+        b = TaxTools.marginalise(gross_profit,a)
         return b
 
     def dividend_tax(salary,dividend,tax_code,tax_year):
-        a = get_csv_for_dataframe('income tax',tax_year)
-        b = interpret_tax_code_allowance(tax_code)
-        c = adjust_allowance(salary,b,a,tax_year)
-        d = get_csv_for_dataframe('dividend rates',tax_year)
-        e = replace_threshold_rates(c,d)
-        f = get_csv_for_dataframe('dividend tax free allowance',tax_year)
-        g = interpret_single_df_value(f)
-        h = create_dividend_table(salary,g,e)
+        a = TaxTools.get_csv_for_dataframe('income tax',tax_year)
+        b = TaxTools.interpret_tax_code_allowance(tax_code)
+        c = TaxTools.adjust_allowance(salary,b,a,tax_year)
+        d = TaxTools.get_csv_for_dataframe('dividend rates',tax_year)
+        e = TaxTools.replace_threshold_rates(c,d)
+        f = TaxTools.get_csv_for_dataframe('dividend tax free allowance',tax_year)
+        g = TaxTools.interpret_single_df_value(f)
+        h = TaxTools.create_dividend_table(salary,g,e)
         take = salary + dividend
-        i = marginalise(take,h)
+        i = TaxTools.marginalise(take,h)
         return i
 
     def student_loans(cash,plan,tax_year):
-        a = get_csv_for_dataframe('student loans',tax_year)
-        b = create_student_loan_table(a,plan)
-        c = marginalise(cash,b)
+        a = TaxTools.get_csv_for_dataframe('student loans',tax_year)
+        b = TaxTools.create_student_loan_table(a,plan)
+        c = TaxTools.marginalise(cash,b)
         return c
 
     #UK Tax Calculation LEVEL 3
     def salary_taxes(salary,tax_code,student_loan_plan,tax_year,student_loan_second_plan='plan 0'):
-        a = employee_ni(salary,tax_code,tax_year)
-        b = income_tax(salary,tax_code,tax_year)
-        c = corporate_ni(salary,tax_code,tax_year)
-        d = student_loans(salary,student_loan_plan,tax_year)
-        e = student_loans(salary,student_loan_second_plan,tax_year)
+        a = TaxTools.employee_ni(salary,tax_code,tax_year)
+        b = TaxTools.income_tax(salary,tax_code,tax_year)
+        c = TaxTools.corporate_ni(salary,tax_code,tax_year)
+        d = TaxTools.student_loans(salary,student_loan_plan,tax_year)
+        e = TaxTools.student_loans(salary,student_loan_second_plan,tax_year)
         total_student_loans = d + e
         salary_take = salary - a - b - total_student_loans
         employee_cost = salary + c
@@ -197,16 +211,16 @@ class TaxTools():
 
     #UK Tax Corporate Calculation LEVEL 4
     def ltd_owner_full_take(turnover,salary,expenses,tax_code,tax_year='2021/2022',student_loan_plan='plan 0',student_loan_second_plan='plan 0'):
-        a = salary_taxes(salary,tax_code,'plan 0',tax_year).copy()
+        a = TaxTools.salary_taxes(salary,tax_code,'plan 0',tax_year).copy()
         turnover_deduct_expenses = turnover - expenses
         gross_profit = turnover - (expenses + salary)
-        c = corporation_tax(gross_profit,tax_year)
+        c = TaxTools.corporation_tax(gross_profit,tax_year)
         net_profit = gross_profit - c
         gross_take = salary + net_profit
-        d = dividend_tax(salary,net_profit,tax_code,tax_year)
+        d = TaxTools.dividend_tax(salary,net_profit,tax_code,tax_year)
         div_take = net_profit - d
-        e = student_loans(gross_take,student_loan_plan,tax_year)
-        f = student_loans(gross_take,student_loan_second_plan,tax_year)
+        e = TaxTools.student_loans(gross_take,student_loan_plan,tax_year)
+        f = TaxTools.student_loans(gross_take,student_loan_second_plan,tax_year)
         total_student_loans = e + f
         a['Student Loans'] = total_student_loans
         total_take = int(a['Salary Takehome']) + div_take - total_student_loans
@@ -228,14 +242,14 @@ class TaxTools():
     def iterate_salaries_ltd_take(turnover,min_salary,max_salary,expenses,iteration_step=1,tax_code='1257A',tax_year='2021/2022',student_loan_plan='plan 0',student_loan_second_plan='plan 0'):
         a = pd.DataFrame()
         for i in range(min_salary,max_salary + 1,iteration_step):
-            b = ltd_owner_full_take(turnover,i,expenses,tax_code)
+            b = TaxTools.ltd_owner_full_take(turnover,i,expenses,tax_code)
             a = pd.concat([a,b])
         a = a.reset_index(drop=True)
         return a
 
     def iterate_ltd_owner_full_take(turnover,expenses,tax_code='1257A',tax_year='2021/2022',student_loan_plan='plan 0',student_loan_second_plan='plan 0'):
         turnover_deduct_expenses = turnover - expenses
-        a = iterate_salaries_ltd_take(turnover,0,turnover_deduct_expenses,expenses,1,tax_code,tax_year,student_loan_plan,student_loan_second_plan)
+        a = TaxTools.iterate_salaries_ltd_take(turnover,0,turnover_deduct_expenses,expenses,1,tax_code,tax_year,student_loan_plan,student_loan_second_plan)
         return a
 
     #UK Tax Corporate Optimisation LEVEL 6
@@ -245,18 +259,19 @@ class TaxTools():
         return b
 
     def optimise_ltd_owner_full_take(turnover,expenses,tax_code,tax_year='2021/2022',student_loan_plan='plan 0',student_loan_second_plan='plan 0'):
-        a = iterate_ltd_owner_full_take(turnover,expenses,tax_code,tax_year,student_loan_plan)
-        b = optimal_take(a)
+        a = TaxTools.iterate_ltd_owner_full_take(turnover,expenses,tax_code,tax_year,student_loan_plan)
+        b = TaxTools.optimal_take(a)
         return(b)
 
-    def optimise_lite_ltd_owner_full_take(turnover,expenses,tax_code,iteration_step=500,tax_year='2021/2022',student_loan_plan='plan 0',student_loan_second_plan='plan 0'):
+    def optimise_lite_ltd_owner_full_take(turnover,expenses,tax_code,tax_year='2021/2022',student_loan_plan='plan 0',student_loan_second_plan='plan 0'):
         turnover_deduct_expenses = turnover - expenses
-        a = iterate_salaries_ltd_take(turnover,0,turnover_deduct_expenses,expenses,iteration_step,tax_code,tax_year,student_loan_plan,student_loan_second_plan)
+        iteration_step = TaxTools.optimal_iterations(input_value)
+        a = TaxTools.iterate_salaries_ltd_take(turnover,0,turnover_deduct_expenses,expenses,iteration_step,tax_code,tax_year,student_loan_plan,student_loan_second_plan)
         optimal_row = a.index[a['Total Takehome'] == a['Total Takehome'].max()].tolist()
         optimal_range = [*range(optimal_row[0]-1,optimal_row[0]+2)]
         optimal_options = a.iloc[optimal_range]
         minn = int(optimal_options.iloc[[0]]['Salary'])
         maxx = int(optimal_options.iloc[[2]]['Salary'])
-        b = iterate_salaries_ltd_take(turnover,minn,maxx,expenses,1,tax_code,tax_year,student_loan_plan,student_loan_second_plan)
-        c = optimal_take(b)
+        b = TaxTools.iterate_salaries_ltd_take(turnover,minn,maxx,expenses,1,tax_code,tax_year,student_loan_plan,student_loan_second_plan)
+        c = TaxTools.optimal_take(b)
         return c
