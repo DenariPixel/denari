@@ -265,7 +265,7 @@ class TaxTools():
 
     def optimise_lite_ltd_owner_full_take(turnover,expenses,tax_code,tax_year='2021/2022',student_loan_plan='plan 0',student_loan_second_plan='plan 0'):
         turnover_deduct_expenses = turnover - expenses
-        iteration_step = TaxTools.optimal_iterations(input_value)
+        iteration_step = TaxTools.optimal_iterations(turnover_deduct_expenses)
         a = TaxTools.iterate_salaries_ltd_take(turnover,0,turnover_deduct_expenses,expenses,iteration_step,tax_code,tax_year,student_loan_plan,student_loan_second_plan)
         optimal_row = a.index[a['Total Takehome'] == a['Total Takehome'].max()].tolist()
         optimal_range = [*range(optimal_row[0]-1,optimal_row[0]+2)]
