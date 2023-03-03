@@ -1,12 +1,12 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name='denari',
-    version='1.0.24',
+    version='1.0.25',
     description='DenariAnalytics OpenSouce Business and Tax Tools',
     author='Fadil Karim',
     author_email='insights@denarianalytics.com',
-    packages=['denari'],
+    packages=find_packages(),
     install_requires=[
         'pandas',
         'numpy',
@@ -14,11 +14,7 @@ setup(
         'dash'
     ],
     package_data={
-    'TaxTools': ['UK Tax Tables/*.csv',
-                 'UK Tax Tables/2020-2021/*.csv',
-                 'UK Tax Tables/2021-2022/*.csv',
-                 'UK Tax Tables/2022-2023/*.csv',
-                 'UK Tax Tables/2023-2024/*.csv']
-                 }
+        'denari': ['UK Tax Tables/**/*']
+    }
 
 )
