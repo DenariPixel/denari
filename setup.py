@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='denari',
-    version='1.0.19',
+    version='1.0.24',
     description='DenariAnalytics OpenSouce Business and Tax Tools',
     author='Fadil Karim',
     author_email='insights@denarianalytics.com',
