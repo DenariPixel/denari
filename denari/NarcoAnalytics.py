@@ -214,27 +214,47 @@ class NarcoAnalytics():
         return df
     
     #AGGREGATE
-    def aggregate_category(df,group_by,column_name,number_column,order_list,metric='sum'):
-        '''
-        level 1
-        '''
-        a = order_list
-        b = []
-        for i in a:
-            s = df.loc[df[column_name] == i]
-            met = {'sum':s.groupby(df[group_by])[number_column].sum(number_column),
-                   'mean':s.groupby(df[group_by])[number_column].mean(number_column),
-                   'max':s.groupby(df[group_by])[number_column].mean(number_column),
-                   'min':s.groupby(df[group_by])[number_column].min(number_column),
-                   'count':s.groupby(df[group_by])[number_column].count().astype(int)
-                  }
-            s = met[metric]
-            b.append(s.rename(i))
 
-        df = pd.concat(b, axis=1)
-        df = df.fillna(0)
-        df = df.sort_values(by=group_by)
-        return df
+    def aggregate_category(df, group_by, column_name, number_column, order_list, metric='sum', subgroup_column=None):
+        """
+        Aggregate a DataFrame by the specified metric for each category in the order_list, with an optional subgroup column.
+        
+        :param df: DataFrame to be aggregated
+        :param group_by: Column name to group by
+        :param column_name: Column name containing categories
+        :param number_column: Column name with numerical data to perform aggregation
+        :param order_list: List of categories in the desired order for the output DataFrame
+        :param metric: Aggregation metric ('sum', 'mean', 'max', 'min', or 'count'); default is 'sum'
+        :param subgroup_column: Optional column name for sub-grouping, default is None
+        :return: Aggregated DataFrame with one column per category in order_list
+        """
+        if metric not in ['sum', 'mean', 'max', 'min', 'count']:
+            raise ValueError("Invalid metric. Must be one of 'sum', 'mean', 'max', 'min', or 'count'.")
+
+        aggregated_data = []
+        for category in order_list:
+            subset = df.loc[df[column_name] == category]
+            
+            if subgroup_column:
+                group_columns = [df[group_by], df[subgroup_column]]
+            else:
+                group_columns = df[group_by]
+                
+            aggregation_methods = {
+                'sum': subset.groupby(group_columns)[number_column].sum(),
+                'mean': subset.groupby(group_columns)[number_column].mean(),
+                'max': subset.groupby(group_columns)[number_column].max(),
+                'min': subset.groupby(group_columns)[number_column].min(),
+                'count': subset.groupby(group_columns)[number_column].count().astype(int)
+            }
+            
+            aggregated_subset = aggregation_methods[metric]
+            aggregated_data.append(aggregated_subset.rename(category))
+
+        result_df = pd.concat(aggregated_data, axis=1)
+        result_df = result_df.fillna(0)
+        result_df = result_df.sort_values(by=group_by)
+        return result_df
     
     def graph_index_columns(df,colors='one',barmode='group'):
         '''
