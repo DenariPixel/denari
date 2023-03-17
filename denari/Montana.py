@@ -25,3 +25,11 @@ class Montana():
         for i in a:
             options.append({'label':i,'value':i})
         return options
+    
+    def filter_time_period(df,main_dropdown_value,sub_dropdown_1):
+        data = df.copy()
+        if main_dropdown_value != 'alltime':
+            data = data[data[main_dropdown_value] == sub_dropdown_1]
+        else:
+            data = data
+        return data
