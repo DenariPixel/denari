@@ -5,25 +5,51 @@ import plotly.graph_objects as go
 import datetime as dt
 slash = '/'
 path = os.getcwd()
-class Montana():
-    def input_dropdown_micro(macro_period):
-        micro_periods = {'alltime':['tax year','year','quarter','month','week','day','weekday'],
-                         'tax year':['quarter','month','week','day','weekday'],
-                         'year':['quarter','month','week','day','weekday'],
-                         'quarter':['month','week','day','weekday','date'],
-                         'month':['week','day','weekday','date'],
-                         'week':['day','weekday','date'],
-                        }
-        options=[]
-        for i in micro_periods[macro_period]:
-            options.append({'label':i,'value':i})
+
+class Montana:
+    @staticmethod
+    def input_dropdown_micro(macro_period: str) -> list:
+        """
+        Generate a list of dictionaries containing the available micro periods for the given macro period.
+
+        Args:
+            macro_period (str): The macro period to consider (e.g., 'alltime', 'tax year', 'year', 'quarter', 'month', 'week').
+
+        Returns:
+            A list of strings containing the available micro periods as options for the input dropdown.
+        """
+        micro_periods = {'alltime': ['tax year', 'year', 'quarter', 'month', 'week', 'day', 'weekday'],
+                         'tax year': ['quarter', 'month', 'week', 'day', 'weekday'],
+                         'year': ['quarter', 'month', 'week', 'day', 'weekday'],
+                         'quarter': ['month', 'week', 'day', 'weekday', 'date'],
+                         'month': ['week', 'day', 'weekday', 'date'],
+                         'week': ['day', 'weekday', 'date'],
+                         }
+
+        options = []
+        for period in micro_periods[macro_period]:
+            options.append({'label': period, 'value': period})
+
         return options
 
-    def input_dropdown_column_set(df,column):
-        a = pd.Series(df[column].unique().astype(str)).to_list()
+    @staticmethod
+    def input_dropdown_column_set(df: pd.DataFrame, column: str) -> list:
+        """
+        Generate a list of dictionaries containing the unique values in the specified DataFrame column.
+
+        Args:
+            df (pd.DataFrame): The DataFrame containing the column to extract unique values from.
+            column (str): The column name to extract unique values from.
+
+        Returns:
+            A list of strings containing the unique values as options for the input dropdown.
+        """
+        unique_values = pd.Series(df[column].unique().astype(str)).to_list()
         options = []
-        for i in a:
-            options.append({'label':i,'value':i})
+
+        for value in unique_values:
+            options.append({'label': value, 'value': value})
+
         return options
     
     def filter_time_period(df,main_dropdown_value,sub_dropdown_1):

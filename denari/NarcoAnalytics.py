@@ -3,119 +3,142 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import datetime as dt
+import TaxTools as tax
+
 slash = '/'
 path = os.getcwd()
 class NarcoAnalytics():
     #APPEARANCE
-    def color_list(category_list,colors='basic'):
-        sets = {'basic':['#FFA89E','#A4DEF5','#ACE1AD'],
-                'one':['#60FA5A','#FF8791','#75AEFA','#FA69B9','#9B70A4','#FAF682','#FACC75'],
-                'profit':['#60FA5A','#FF8791','#75AEFA'],
-                'binary-p/b':['#75AEFA','#FA69B9']
-               }
-        a = len(category_list)
-        col = ['lightslategray',] * a
-        color_set = sets[colors]
-        color_set = color_set[:a]
-        for i in color_set:
-            col[color_set.index(i)] = i
-        return col
-    
+    def color_list(category_list, colors='basic') -> list:
+        """
+        Generates a list of colors for the provided category list based on the specified color set.
+        
+        :param category_list: List of categories for which colors are needed
+        :param colors: Name of the color set to use ('basic', 'one', 'profit', or 'binary-p/b'); default is 'basic'
+        :return: List of colors corresponding to the category_list, based on the specified color set
+        """
+        color_sets = {
+            'basic': ['#FFA89E', '#A4DEF5', '#ACE1AD'],
+            'one': ['#60FA5A', '#FF8791', '#75AEFA', '#FA69B9', '#9B70A4', '#FAF682', '#FACC75'],
+            'profit': ['#60FA5A', '#FF8791', '#75AEFA'],
+            'binary-p/b': ['#75AEFA', '#FA69B9']
+        }
+
+        num_categories = len(category_list)
+        default_color = 'lightslategray'
+        color_list = [default_color] * num_categories
+
+        selected_color_set = color_sets[colors]
+        trimmed_color_set = selected_color_set[:num_categories]
+
+        for color in trimmed_color_set:
+            color_list[trimmed_color_set.index(color)] = color
+
+        return color_list
+
     #GENERAL
-    def column_set(df,group,group_by,ascending=True):
-        df = df.sort_values(group_by,ascending=ascending)
-        a = pd.Series(df[group].unique()).tolist()
-        return a
+    def column_set(df: pd.DataFrame, group: str, group_by: str, ascending=True) -> list:
+        """
+        Sorts the DataFrame by the specified 'group_by' column and returns a list of unique values in the 'group' column.
+        
+        :param df: Input DataFrame
+        :param group: Column name to get unique values from
+        :param group_by: Column name to sort the DataFrame by
+        :param ascending: Boolean indicating the sorting order; True for ascending, False for descending; default is True
+        :return: List of unique values in the 'group' column, sorted by the 'group_by' column
+        """
+        sorted_df = df.sort_values(by=group_by, ascending=ascending)
+        unique_values = pd.Series(sorted_df[group].unique()).tolist()
+        return unique_values
     
     #DATES/TIMES
-    def set_dates(df:pd.DataFrame,date_name='date',date_index=False):
-        #If date index == True...
-        df[date_name] = pd.to_datetime(df[date_name], dayfirst = True)
-        df.sort_values(by=date_name,inplace=True)           
-        df.reset_index(inplace=True,drop=True)
-        return df
-    
-    def tax_year(df,country_code='uk'):
-        '''
-        creates a tax year pd.Series
-        '''
-        dff = df.loc[:, ['date']].copy()
-        tax = {'uk': {'start': '6-4', 'end': '5-4'},
-               'usa': {'start': '1-1', 'end': '31-12'}
-              }
-        start = tax[country_code]['start']
-        dff['start'] = start
-        dff['year'] = dff['date'].dt.year.astype(str)
-        dff['start date'] = dff['start'] + '-' + dff['year']
-        dff['start date'] = pd.to_datetime(dff['start date'])
-        dff['before_start'] = dff['date'] < dff['start date']
-        dff['year'] = dff['year'].astype(int)
-        dff['year before'] = dff['year'] - 1
-        dff['year after'] = dff['year'] + 1
-        dff['tax year'] = np.where(dff['before_start'],
-                                   (dff['year before']).astype(str) + '/' + (dff['year']).astype(str),
-                                   (dff['year']).astype(str) + '/' + (dff['year after']).astype(str))
-        return dff['tax year']
-    
-    def split_dates(df:pd.DataFrame,date_column='date',format='period'):
+    def set_dates(df: pd.DataFrame, date_column='date', date_index=False) -> pd.DataFrame:
+        """
+        Converts the specified date column to datetime objects, sorts the DataFrame by date, and optionally sets the date column as the index.
         
-        if format == 'period':
-            new_columns = {'tax year':NarcoAnalytics.tax_year(df),
-                           'year':pd.to_datetime(df[date_column]).dt.to_period('Y'),
-                           'quarter':pd.to_datetime(df[date_column]).dt.to_period('Q'),
-                           'month':pd.to_datetime(df[date_column]).dt.to_period('M'),
-                           'week': pd.to_datetime(df[date_column]).dt.isocalendar().week,
-                           'day':df[date_column].dt.day,
-                           'weekday':df[date_column].dt.weekday
-                           #'weekday':df[date_column].dt.day_name()
-                          }
-        elif format == 'numeric':
-            new_columns = {'tax year':NarcoAnalytics.tax_year(df),
-                           'year':df[date_column].dt.year,
-                           'quarter':df[date_column].dt.quarter,
-                           'month':df[date_column].dt.month,
-                           'week':df[date_column].dt.isocalendar().week,
-                           'day':df[date_column].dt.day,
-                           'weekday':df[date_column].dt.weekday
-                          }
-        elif format == 'named_period':
-            new_columns = {'tax year':NarcoAnalytics.tax_year(df),
-                           'year':pd.to_datetime(df[date_column]).dt.to_period('Y'),
-                           'quarter':pd.to_datetime(df[date_column]).dt.to_period('Q'),
-                           'month':df[date_column].dt.month_name(),
-                           'week':df[date_column].dt.isocalendar().week,
-                           'day':df[date_column].dt.day,
-                           'weekday':df[date_column].dt.day_name()
-                          }
-        elif format == 'named_numeric':
-            new_columns = {'tax year':NarcoAnalytics.tax_year(df),
-                           'year':df[date_column].dt.year,
-                           'quarter':df[date_column].dt.quarter,
-                           'month':df[date_column].dt.month_name(),
-                           'week':df[date_column].dt.isocalendar().week,
-                           'day':df[date_column].dt.day,
-                           'weekday':df[date_column].dt.day_name()
-                          }
-        keys = list(new_columns.keys())
-        for i in keys:
-            df.insert(loc = 1,
-                      column = i,
-                      value = new_columns[i])
+        :param df: Input DataFrame with a date column
+        :param date_column: Name of the date column; default is 'date'
+        :param date_index: Boolean indicating whether to set the date column as the index; default is False
+        :return: DataFrame with the date column converted to datetime objects and sorted by date
+        """
+        df[date_column] = pd.to_datetime(df[date_column], dayfirst=True)
+        df.sort_values(by=date_column, inplace=True)
+        
+        if date_index:
+            df.set_index(date_column, inplace=True)
+        else:
+            df.reset_index(inplace=True, drop=True)
+        
         return df
     
-    def create_date_range(first_date,last_date="today",split_dates=True,split_format='named_numeric',date_index=False):
-        #Date Index
-        dates = pd.date_range(first_date,pd.to_datetime(last_date))
-        date_range = pd.DataFrame(dates)
-        date_range = date_range.rename(columns={0: 'date'})
+    def split_dates(df: pd.DataFrame, date_column='date', format='period') -> pd.DataFrame:
+        """
+        Splits the specified date column into different date components (tax year, year, quarter, month, week, day, and weekday) and adds them as new columns to the DataFrame.
+
+        :param df: Input DataFrame with a date column
+        :param date_column: Name of the date column; default is 'date'
+        :param format: Format of the date components ('period', 'numeric', 'named_period', or 'named_numeric'); default is 'period'
+        :return: DataFrame with new date component columns added
+        """
+        def get_date_columns(format) -> dict:
+            if format in ['period', 'numeric']:
+                year = df[date_column].dt.year if format == 'numeric' else pd.to_datetime(df[date_column]).dt.to_period('Y')
+                quarter = df[date_column].dt.quarter if format == 'numeric' else pd.to_datetime(df[date_column]).dt.to_period('Q')
+                month = df[date_column].dt.month if format == 'numeric' else pd.to_datetime(df[date_column]).dt.to_period('M')
+            else:
+                year = df[date_column].dt.year
+                quarter = df[date_column].dt.quarter
+                month = df[date_column].dt.month_name()
+
+            return {
+                'tax year': tax.tax_year(df),
+                'year': year,
+                'quarter': quarter,
+                'month': month,
+                'week': df[date_column].dt.isocalendar().week,
+                'day': df[date_column].dt.day,
+                'weekday': df[date_column].dt.weekday if format in ['period', 'numeric'] else df[date_column].dt.day_name()
+            }
+
+        new_columns = get_date_columns(format)
+
+        for column_name, column_values in new_columns.items():
+            df.insert(loc=1, column=column_name, value=column_values)
+
+        return df
+
+    def create_date_range(first_date, last_date="today", split_dates=True, split_format='named_numeric', date_index=False) -> pd.DataFrame:
+        """
+        Creates a DataFrame containing a date range between first_date and last_date, with optional date component columns and date index.
+
+        :param first_date: First date of the date range
+        :param last_date: Last date of the date range; default is "today"
+        :param split_dates: Boolean indicating whether to add date component columns; default is True
+        :param split_format: Format of the date components if split_dates is True ('period', 'numeric', 'named_period', or 'named_numeric'); default is 'named_numeric'
+        :param date_index: Boolean indicating whether to set the date column as the index; default is False
+        :return: DataFrame containing the date range with optional date component columns and date index
+        """
+        dates = pd.date_range(first_date, pd.to_datetime(last_date))
+        date_range = pd.DataFrame(dates, columns=['date'])
         date_range['date'] = pd.to_datetime(date_range['date'])
+
         if date_index:
-            date_range.set_index('date',inplace=True)
-        if split_dates == True:
-            date_range = split_dates(date_range,format=split_format)
+            date_range.set_index('date', inplace=True)
+
+        if split_dates:
+            date_range = split_dates(date_range, format=split_format)
+
         return date_range
-    
-    def filter_date_range_(data:pd.DataFrame,start_date,end_date):
+
+    def filter_date_range(data: pd.DataFrame, start_date, end_date) -> pd.DataFrame:
+        """
+        Filters the input DataFrame based on the given start_date and end_date. Assumes the DataFrame has a DateTimeIndex.
+
+        :param data: Input DataFrame with a DateTimeIndex
+        :param start_date: Start date for filtering
+        :param end_date: End date for filtering
+        :return: Filtered DataFrame containing only rows within the specified date range
+        """
         date_range = (data.index > start_date) & (data.index <= end_date)
         return data[date_range]
     
@@ -127,163 +150,248 @@ class NarcoAnalytics():
         df = df[(date_series >= start_date) & (date_series <= end_date)]
         return df
     
-    def fill_dates(df,date_column='date'):
-        '''
-        Created with ChatGPT
-        '''
-        df_dates = NarcoAnalytics.create_date_range(df.iloc[0][date_column],split_dates=False,last_date=df.iloc[-1][date_column])
-        # Set the date column as the index for both dataframes
-        df = df.set_index('date')
-        df_dates = df_dates.set_index('date')
-        # Combine the dataframes using outer join and fill any missing values with values from df2
-        df2 = df.join(df_dates, how='outer')
-        # Reset the index of df
-        df2 = df2.reset_index()
-        # Sort the values by date
-        df2 = df2.sort_values('date')
-        return df2
-    
+    def fill_dates(df: pd.DataFrame, date_column: str = 'date') -> pd.DataFrame:
+        """
+        Fill missing dates in the DataFrame with empty rows.
+
+        :param df: Input DataFrame with a date column
+        :param date_column: Column name containing dates; default is 'date'
+        :return: DataFrame with missing dates filled
+        """
+        first_date = df[date_column].min()
+        last_date = df[date_column].max()
+        date_range = pd.date_range(start=first_date, end=last_date)
+        
+        df.set_index(date_column, inplace=True)
+        df_filled = df.reindex(date_range)
+        df_filled.reset_index(inplace=True)
+        df_filled.rename(columns={'index': date_column}, inplace=True)
+
+        return df_filled
+
     #METRICS
-    def metric_n(df,group_by,number_column,metric):
-        df2 = pd.DataFrame()
-        met = {'sum':df2.groupby(df[group_by])[number_column].sum(number_column),
-               'mean':df2.groupby(df[group_by])[number_column].mean(number_column),
-               'max':df2.groupby(df[group_by])[number_column].mean(number_column),
-               'min':df2.groupby(df[group_by])[number_column].min(number_column),
-               'count':df2.groupby(df[group_by])[number_column].count().astype(int)
-              }
-        return met[metric]
-    def metric_column_single(df,column_name,metric='sum'):
-        met = {'sum':df[column_name].sum(),
-               'mean':df[column_name].mean(),
-               'max':df[column_name].mean(),
-               'min':df[column_name].min(),
-               'count':df[column_name].count().astype(int)
-              }
-        return met[metric]
-    
-    def metric_columns(df,metric='sum'):
-        output = {'sum':df.sum(),
-                  'mean':df.mean(),
-                  'max':df.max(),
-                  'min':df.min(),
-                  'std':df.std(),
-                  'var':df.var(),
-                  'mode':df.mode(),
-                  'count':df.count()
-                 }
-        df2 = output[metric]
-        df2 = pd.DataFrame(df2)
-        return df2
-    
-    #CASH FLOW
-    def gross_profit(df,group_by,columns='r-e-p',custom_columns=[]):
-        column_set = {'r-e-p':['revenue','expenditure','gross profit'],
-                      'custom':custom_columns}
-        columns_keep = column_set[columns]
-        columns_keep.insert(0, group_by)
-        df = df[columns_keep]
+    def metric_n(df: pd.DataFrame, group_by: str, number_column: str, metric: str) -> pd.DataFrame:
+        """
+        Calculate the specified metric for a numerical column grouped by another column.
 
-        met = {'sum':df.groupby(df[group_by]).sum(),
-               'mean':df.groupby(df[group_by]).mean(),
-               'max':df.groupby(df[group_by]).mean(),
-               'min':df.groupby(df[group_by]).min(),
-               'count':df.groupby(df[group_by]).count().astype(int)
-              }
+        :param df: Input DataFrame
+        :param group_by: Column to group the data by
+        :param number_column: Column with numerical data to perform the metric calculation on
+        :param metric: Desired metric to calculate ('sum', 'mean', 'max', 'min', 'count')
+        :return: DataFrame with the calculated metric
+        """
+        metric_func = {
+            'sum': df.groupby(group_by)[number_column].sum(),
+            'mean': df.groupby(group_by)[number_column].mean(),
+            'max': df.groupby(group_by)[number_column].max(),
+            'min': df.groupby(group_by)[number_column].min(),
+            'count': df.groupby(group_by)[number_column].count(),
+        }
+        return metric_func[metric]
 
-        df = met['sum']
+    def metric_column_single(df: pd.DataFrame, column_name: str, metric: str = 'sum') -> float:
+        """
+        Calculate the specified metric for a single numerical column in a DataFrame.
+
+        :param df: Input DataFrame
+        :param column_name: Column with numerical data to perform the metric calculation on
+        :param metric: Desired metric to calculate ('sum', 'mean', 'max', 'min', 'count')
+        :return: Calculated metric value
+        """
+        metric_func = {
+            'sum': df[column_name].sum(),
+            'mean': df[column_name].mean(),
+            'max': df[column_name].max(),
+            'min': df[column_name].min(),
+            'count': df[column_name].count(),
+        }
+        return metric_func[metric]
+
+    def metric_columns(df: pd.DataFrame, metric: str = 'sum') -> pd.DataFrame:
+        """
+        Calculate the specified metric for all numerical columns in a DataFrame.
+
+        :param df: Input DataFrame
+        :param metric: Desired metric to calculate ('sum', 'mean', 'max', 'min', 'std', 'var', 'mode', 'count')
+        :return: DataFrame with the calculated metric for all numerical columns
+        """
+        metric_func = {
+            'sum': df.sum(),
+            'mean': df.mean(),
+            'max': df.max(),
+            'min': df.min(),
+            'std': df.std(),
+            'var': df.var(),
+            'mode': df.mode().iloc[0],
+            'count': df.count(),
+        }
+        result = metric_func[metric]
+        return pd.DataFrame(result).reset_index().rename(columns={0: metric, "index": "column"})
+
+    #CASH
+    def gross_profit(df: pd.DataFrame, group_by: str, columns: str = 'r-e-p', custom_columns: list = None) -> pd.DataFrame:
+        """
+        Calculate gross profit metrics for a DataFrame based on the specified columns.
+
+        :param df: Input DataFrame with required columns
+        :param group_by: Column name to group by
+        :param columns: A string indicating which set of columns to use ('r-e-p' or 'custom'); default is 'r-e-p'
+        :param custom_columns: A list of custom column names to use if 'custom' is selected; default is None
+        :return: DataFrame with gross profit metrics
+        """
+        column_set = {'r-e-p': ['revenue', 'expenditure', 'gross profit'],
+                    'custom': custom_columns if custom_columns else []}
+
+        columns_to_keep = column_set[columns]
+        columns_to_keep.insert(0, group_by)
+        df = df[columns_to_keep]
+
+        metrics = {'sum': df.groupby(df[group_by]).sum(),
+                'mean': df.groupby(df[group_by]).mean(),
+                'max': df.groupby(df[group_by]).max(),
+                'min': df.groupby(df[group_by]).min(),
+                'count': df.groupby(df[group_by]).count().astype(int)}
+
+        df = metrics['sum']
         return df
     
-    def cash_cumulate(df,expenditure=True,revenue=True,profit=True,gross_return=True):
-        '''
-        Requires Columns Named:
-            'Expenditure'
-            'Revenue'
-            'Gross Profit'
-            'Gross Return (%)'
-        '''
+    def cash_cumulate(df: pd.DataFrame, expenditure: bool = True, revenue: bool = True, profit: bool = True, gross_return: bool = True) -> pd.DataFrame:
+        """
+        Calculate cumulative revenue, expenditure, profit, and gross return for a DataFrame.
+
+        :param df: Input DataFrame with columns named 'Expenditure', 'Revenue', 'Gross Profit', and 'Gross Return (%)'
+        :param expenditure: Calculate cumulative expenditure if True; default is True
+        :param revenue: Calculate cumulative revenue if True; default is True
+        :param profit: Calculate cumulative profit if True; default is True
+        :param gross_return: Calculate gross return if True; default is True
+        :return: DataFrame with calculated cumulative columns
+        """
         if revenue:
-            df["cumulative revenue"] = df["revenue"].cumsum()
+            df["cumulative revenue"] = df["Revenue"].cumsum()
         if expenditure:
-            df["cumulative expenditure"] = df["expenditure"].cumsum()
+            df["cumulative expenditure"] = df["Expenditure"].cumsum()
         if profit:
             df["cumulative profit"] = df["cumulative revenue"] - df["cumulative expenditure"]
         if gross_return:
-            df["gross return (%)"] = df["cumulative profit"]/df["cumulative expenditure"] * 100
+            df["gross return (%)"] = df["cumulative profit"] / df["cumulative expenditure"] * 100
             df["gross return (%)"] = df["gross return (%)"].fillna(0)
+
         return df
     
     #AGGREGATE
-    def aggregate_category(df,group_by,column_name,number_column,order_list,metric='sum'):
-        '''
-        level 1
-        '''
-        a = order_list
-        b = []
-        for i in a:
-            s = df.loc[df[column_name] == i]
-            met = {'sum':s.groupby(df[group_by])[number_column].sum(number_column),
-                   'mean':s.groupby(df[group_by])[number_column].mean(number_column),
-                   'max':s.groupby(df[group_by])[number_column].mean(number_column),
-                   'min':s.groupby(df[group_by])[number_column].min(number_column),
-                   'count':s.groupby(df[group_by])[number_column].count().astype(int)
-                  }
-            s = met[metric]
-            b.append(s.rename(i))
+    def aggregate_category(df, group_by, column_name, number_column, order_list, metric='sum', subgroup_column=None) -> pd.DataFrame:
+        """
+        Aggregate a DataFrame by the specified metric for each category in the order_list, with an optional subgroup column.
+        
+        :param df: DataFrame to be aggregated
+        :param group_by: Column name to group by
+        :param column_name: Column name containing categories
+        :param number_column: Column name with numerical data to perform aggregation
+        :param order_list: List of categories in the desired order for the output DataFrame
+        :param metric: Aggregation metric ('sum', 'mean', 'max', 'min', or 'count'); default is 'sum'
+        :param subgroup_column: Optional column name for sub-grouping, default is None
+        :return: Aggregated DataFrame with one column per category in order_list
+        """
+        if metric not in ['sum', 'mean', 'max', 'min', 'count']:
+            raise ValueError("Invalid metric. Must be one of 'sum', 'mean', 'max', 'min', or 'count'.")
 
-        df = pd.concat(b, axis=1)
-        df = df.fillna(0)
-        df = df.sort_values(by=group_by)
-        return df
+        aggregated_data = []
+        for category in order_list:
+            subset = df.loc[df[column_name] == category]
+            
+            if subgroup_column:
+                group_columns = [df[group_by], df[subgroup_column]]
+            else:
+                group_columns = df[group_by]
+                
+            aggregation_methods = {
+                'sum': subset.groupby(group_columns)[number_column].sum(),
+                'mean': subset.groupby(group_columns)[number_column].mean(),
+                'max': subset.groupby(group_columns)[number_column].max(),
+                'min': subset.groupby(group_columns)[number_column].min(),
+                'count': subset.groupby(group_columns)[number_column].count().astype(int)
+            }
+            
+            aggregated_subset = aggregation_methods[metric]
+            aggregated_data.append(aggregated_subset.rename(category))
+
+        result_df = pd.concat(aggregated_data, axis=1)
+        result_df = result_df.fillna(0)
+        result_df = result_df.sort_values(by=group_by)
+        return result_df
     
-    def graph_index_columns(df,colors='one',barmode='group'):
-        '''
-        level 2
+    def graph_index_columns(df: pd.DataFrame, colors: str = 'one', barmode: str = 'group') -> go.Figure:
+        """
+        Creates a grouped bar chart using a DataFrame with a PeriodIndex (specifically for monthly periods) or other index types.
 
-        '''
+        :param df: Input DataFrame with index and columns to be used for the bar chart
+        :param colors: Color set to use for the bars; default is 'one'
+        :param barmode: Barmode for the plotly chart; default is 'group'
+        :return: plotly.graph_objects.Figure containing the bar chart
+        """
         if df.index.dtype == 'period[M]':
-                df.index = df.index.strftime("%Y-%m").to_list()
+            df.index = df.index.strftime("%Y-%m").to_list()
+
         col_names = df.columns.values.tolist()
         index_names = df.index.values.tolist()
         index_names = list(map(str, index_names))
-        colors = NarcoAnalytics.color_list(col_names,colors=colors)
+
+        colors = NarcoAnalytics.color_list(col_names, colors=colors)
         bars = []
+
         for i in col_names:
             bar = go.Bar(name=i, x=index_names, y=df[i], marker_color=colors[col_names.index(i)])
             bars.append(bar)
+
         fig = go.Figure(bars)
         fig.update_layout(barmode=barmode)
+
         return fig
     
-    def graph_metrics(df,graph_type='bar',colors='one'):
+    def graph_metrics(df: pd.DataFrame, graph_type: str = 'bar', colors: str = 'one') -> go.Figure:
+        """
+        Creates a bar or pie chart using a DataFrame with index and values.
+
+        :param df: Input DataFrame with index and values to be used for the chart
+        :param graph_type: Type of chart to create, either 'bar' or 'pie'; default is 'bar'
+        :param colors: Color set to use for the bars or pie slices; default is 'one'
+        :return: plotly.graph_objects.Figure containing the chart
+        """
         index_names = df.index.values.tolist()
         index_names = list(map(str, index_names))
         values = df[0].tolist()
-        colors = NarcoAnalytics.color_list(index_names,colors=colors)
-        fig_type = {'pie': go.Pie(labels=index_names, values=values, marker_colors=colors, sort=False),
-                    'bar': go.Bar(x=index_names, y=values, marker_color=colors)}
-        fig = go.Figure(data=fig_type[graph_type])
-        #if graph_type == 'pie':
-            #fig = go.Figure(data=[go.Pie(labels=index_names, values=values, marker_colors=colors, sort=False)])
+
+        colors = NarcoAnalytics.color_list(index_names, colors=colors)
+
+        fig_data = {
+            'pie': go.Pie(labels=index_names, values=values, marker_colors=colors, sort=False),
+            'bar': go.Bar(x=index_names, y=values, marker_color=colors)
+        }
+
+        fig = go.Figure(data=fig_data[graph_type])
+
         return fig
     
-    def metric(column,metric):
-        if metric == 'sum':
-            x = column.sum()
-        elif metric == 'mean':
-            x = column.mean()
-        elif metric == 'max':
-            x = column.max()
-        elif metric == 'min':
-            x = column.min()
-        elif metric == 'std':
-            x = column.std()
-        elif metric == 'var':
-            x = column.var()
-        elif metric == 'mode':
-            x = column.mode()
-        elif metric == 'count':
-            x = column.count()
+    def metric(column: pd.Series, metric: str) -> float:
+        """
+        Calculate a specified metric for a given Pandas Series.
+
+        :param column: Input Pandas Series for which the metric should be calculated
+        :param metric: Metric to calculate, e.g., 'sum', 'mean', 'max', 'min', 'std', 'var', 'mode', 'count'
+        :return: The calculated metric value or a string indicating an error
+        """
+        metric_functions = {
+            'sum': column.sum,
+            'mean': column.mean,
+            'max': column.max,
+            'min': column.min,
+            'std': column.std,
+            'var': column.var,
+            'mode': column.mode,
+            'count': column.count
+        }
+
+        if metric in metric_functions:
+            return metric_functions[metric]()
         else:
             return 'error: incorrect metric input'
-        return x
