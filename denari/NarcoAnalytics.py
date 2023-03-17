@@ -229,7 +229,7 @@ class NarcoAnalytics():
         return pd.DataFrame(result).reset_index().rename(columns={0: metric, "index": "column"})
 
     #CASH
-    def gross_profit(df: pd.DataFrame, group_by: str, columns: str = 'r-e-p', custom_columns: List[str] = None) -> pd.DataFrame:
+    def gross_profit(df: pd.DataFrame, group_by: str, columns: str = 'r-e-p', custom_columns: list = None) -> pd.DataFrame:
         """
         Calculate gross profit metrics for a DataFrame based on the specified columns.
 

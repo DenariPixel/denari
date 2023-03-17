@@ -3,8 +3,6 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import datetime as dt
-slash = '/'
-#path = os.getcwd()
 class TaxTools():
     def tax_year(df, country_code='uk'):
         """
@@ -464,7 +462,7 @@ class TaxTools():
         return pd.DataFrame(data=tax_data)
 
     #UK Tax Corporate Calculation LEVEL 4
-    def ltd_owner_full_take(turnover: float, salary: float, expenses: float, tax_year: str, tax_code: str, student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0') -> pd.DataFrame:
+    def ltd_full_take(turnover: float, salary: float, expenses: float, tax_year: str, tax_code: str, student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0') -> pd.DataFrame:
         """
         Calculate the total take-home for a limited company owner, given turnover, salary, expenses, tax year, tax code, and student loan plans.
 
@@ -516,7 +514,21 @@ class TaxTools():
         return salary_taxes
 
     #UK Tax Corporate Scenario Iteration LEVEL 5
-    def iterate_salaries_ltd_take(turnover: float, min_salary: int, max_salary: int, expenses: float, tax_year: str, tax_code: str = '1257A', student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0', iteration_step: int = 1) -> pd.DataFrame:
+
+    def optimal_take(options: pd.DataFrame) -> pd.DataFrame:
+        """
+        Find the optimal take-home value from a given DataFrame containing different scenarios.
+
+        Args:
+            options (pd.DataFrame): A DataFrame containing different scenarios with a 'Total Takehome' column.
+
+        Returns:
+            pd.DataFrame: A DataFrame containing the optimal take-home scenario(s) with the highest take-home value.
+        """
+        optimal_scenario = options[options['Total Takehome'] == options['Total Takehome'].max()]
+        return optimal_scenario
+    
+    def iterate_salaries(turnover: float, min_salary: int, max_salary: int, expenses: float, tax_year: str, tax_code: str = '1257A', student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0', iteration_step: int = 1) -> pd.DataFrame:
         """
         Iterate through different salary levels within the given range and calculate the total take-home for a limited company owner.
 
@@ -544,7 +556,7 @@ class TaxTools():
 
         return results
 
-    def iterate_ltd_owner_full_take(turnover: float, expenses: float, tax_year: str, tax_code: str = '1257A', student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0') -> pd.DataFrame:
+    def iterate_full_take(turnover: float, expenses: float, tax_year: str, tax_code: str = '1257A', student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0', optimal: bool = True) -> pd.DataFrame:
         """
         Iterate through different salary levels from 0 up to the turnover value minus expenses and calculate the total take-home for a limited company owner.
 
@@ -560,28 +572,20 @@ class TaxTools():
             pd.DataFrame: A DataFrame containing the calculated take-home and other relevant information for each salary level from 0 up to the turnover value minus expenses.
         """
         turnover_deduct_expenses = turnover - expenses
-        results = TaxTools.iterate_salaries_ltd_take(turnover, 0, turnover_deduct_expenses, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, iteration_step=1)
+        results = TaxTools.iterate_salaries(turnover, 0, turnover_deduct_expenses, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, iteration_step=1)
+       
+        if optimal:
+            results = TaxTools.optimal_take(results)
 
         return results
 
     #UK Tax Corporate Optimisation LEVEL 6
-    def optimal_take(options: pd.DataFrame) -> pd.DataFrame:
+
+    def iterate_lite_full_take(turnover: float, expenses: float, tax_year: str, tax_code: str, student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0', optimal: bool = True) -> pd.DataFrame:
         """
-        Find the optimal take-home value from a given DataFrame containing different scenarios.
+        Optimise the take-home value for a limited company owner using a lighter approach.
 
-        Args:
-            options (pd.DataFrame): A DataFrame containing different scenarios with a 'Total Takehome' column.
-
-        Returns:
-            pd.DataFrame: A DataFrame containing the optimal take-home scenario(s) with the highest take-home value.
-        """
-        optimal_scenarios = options[options['Total Takehome'] == options['Total Takehome'].max()]
-        return optimal_scenarios
-
-
-    def optimise_ltd_owner_full_take(turnover: float, expenses: float, tax_year: str, tax_code: str, student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0') -> pd.DataFrame:
-        """
-        Optimize the take-home value for a limited company owner by iterating over different salary scenarios.
+        The function first finds an optimal range for iterating over different salary scenarios by using the optimal_iterations function. It then narrows down the range and iterates over the refined range to find the optimal take-home scenario.
 
         Args:
             turnover (float): The total turnover of the company.
@@ -594,39 +598,20 @@ class TaxTools():
         Returns:
             pd.DataFrame: A DataFrame containing the optimal take-home scenario(s) with the highest take-home value.
         """
-        scenarios = TaxTools.iterate_ltd_owner_full_take(turnover, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan)
-        optimal_scenarios = TaxTools.optimal_take(scenarios)
-        return optimal_scenarios
+        turnover_deduct_expenses = turnover - expenses
+        iteration_step = TaxTools.optimal_iterations(turnover_deduct_expenses)
 
-def optimise_lite_ltd_owner_full_take(turnover: float, expenses: float, tax_year: str, tax_code: str, student_loan_plan: str = 'plan 0', student_loan_second_plan: str = 'plan 0') -> pd.DataFrame:
-    """
-    Optimise the take-home value for a limited company owner using a lighter approach.
+        initial_scenarios = TaxTools.iterate_salaries(turnover, 0, turnover_deduct_expenses, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, iteration_step)
+        optimal_row = initial_scenarios.index[initial_scenarios['Total Takehome'] == initial_scenarios['Total Takehome'].max()].tolist()
+        optimal_range = [*range(optimal_row[0] - 1, optimal_row[0] + 2)]
+        optimal_options = initial_scenarios.iloc[optimal_range]
 
-    The function first finds an optimal range for iterating over different salary scenarios by using the optimal_iterations function. It then narrows down the range and iterates over the refined range to find the optimal take-home scenario.
+        min_salary = int(optimal_options.iloc[[0]]['Salary'])
+        max_salary = int(optimal_options.iloc[[2]]['Salary'])
 
-    Args:
-        turnover (float): The total turnover of the company.
-        expenses (float): The total expenses of the company.
-        tax_year (str): The tax year to consider for calculations (e.g., '2021/2022').
-        tax_code (str): The tax code to use for calculations (e.g., '1257A').
-        student_loan_plan (str, optional): The student loan plan to use for calculations (e.g., 'plan 1'). Defaults to 'plan 0'.
-        student_loan_second_plan (str, optional): The second student loan plan to use for calculations (e.g., 'plan 2'). Defaults to 'plan 0'.
+        results = TaxTools.iterate_salaries(turnover, min_salary, max_salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, 1)
+        
+        if optimal:
+                results = TaxTools.optimal_take(results)
 
-    Returns:
-        pd.DataFrame: A DataFrame containing the optimal take-home scenario(s) with the highest take-home value.
-    """
-    turnover_deduct_expenses = turnover - expenses
-    iteration_step = TaxTools.optimal_iterations(turnover_deduct_expenses)
-
-    initial_scenarios = TaxTools.iterate_salaries_ltd_take(turnover, 0, turnover_deduct_expenses, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, iteration_step)
-    optimal_row = initial_scenarios.index[initial_scenarios['Total Takehome'] == initial_scenarios['Total Takehome'].max()].tolist()
-    optimal_range = [*range(optimal_row[0] - 1, optimal_row[0] + 2)]
-    optimal_options = initial_scenarios.iloc[optimal_range]
-
-    min_salary = int(optimal_options.iloc[[0]]['Salary'])
-    max_salary = int(optimal_options.iloc[[2]]['Salary'])
-
-    refined_scenarios = TaxTools.iterate_salaries_ltd_take(turnover, min_salary, max_salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, 1)
-    optimal_scenarios = TaxTools.optimal_take(refined_scenarios)
-    
-    return optimal_scenarios
+        return results
