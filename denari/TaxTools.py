@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import datetime as dt
+
 class TaxTools():
     def tax_year(df, country_code='uk'):
         """

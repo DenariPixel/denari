@@ -3,9 +3,8 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import datetime as dt
-import TaxTools as tax
+from .TaxTools import TaxTools as tax
 
-slash = '/'
 path = os.getcwd()
 class NarcoAnalytics():
     #APPEARANCE
