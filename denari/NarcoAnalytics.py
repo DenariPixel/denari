@@ -160,13 +160,22 @@ class NarcoAnalytics():
         first_date = df[date_column].min()
         last_date = df[date_column].max()
         date_range = pd.date_range(start=first_date, end=last_date)
-        
+
         df.set_index(date_column, inplace=True)
+
+        df = df.reset_index()
+        df["count"] = df.groupby(date_column).cumcount()
+        df.set_index([date_column, "count"], inplace=True)
+
+        date_range = pd.MultiIndex.from_product([pd.date_range(start=first_date, end=last_date), range(df.index.levels[1].size)])
+
         df_filled = df.reindex(date_range)
         df_filled.reset_index(inplace=True)
-        df_filled.rename(columns={'index': date_column}, inplace=True)
+        df_filled.rename(columns={'level_0': date_column}, inplace=True)
+        df_filled.drop(columns=['level_1'], inplace=True)
 
         return df_filled
+
 
     #METRICS
     def metric_n(df: pd.DataFrame, group_by: str, number_column: str, metric: str) -> pd.DataFrame:
