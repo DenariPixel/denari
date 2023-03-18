@@ -549,7 +549,7 @@ class TaxTools():
         results = pd.DataFrame()
 
         for salary in range(min_salary, max_salary + 1, iteration_step):
-            salary_data = TaxTools.ltd_owner_full_take(turnover, salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan)
+            salary_data = TaxTools.ltd_full_take(turnover, salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan)
             results = pd.concat([results, salary_data])
 
         results = results.reset_index(drop=True)
