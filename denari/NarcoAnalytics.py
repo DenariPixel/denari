@@ -275,9 +275,9 @@ class NarcoAnalytics():
         :return: DataFrame with calculated cumulative columns
         """
         if revenue:
-            df["cumulative revenue"] = df["Revenue"].cumsum()
+            df["cumulative revenue"] = df["revenue"].cumsum()
         if expenditure:
-            df["cumulative expenditure"] = df["Expenditure"].cumsum()
+            df["cumulative expenditure"] = df["expenditure"].cumsum()
         if profit:
             df["cumulative profit"] = df["cumulative revenue"] - df["cumulative expenditure"]
         if gross_return:
@@ -365,15 +365,13 @@ class NarcoAnalytics():
         :param colors: Color set to use for the bars or pie slices; default is 'one'
         :return: plotly.graph_objects.Figure containing the chart
         """
-        index_names = df.index.values.tolist()
-        index_names = list(map(str, index_names))
-        values = df[0].tolist()
-
-        colors = NarcoAnalytics.color_list(index_names, colors=colors)
+        names = df['column'].tolist()
+        values = df.iloc[:, 1]
+        colors = NarcoAnalytics.color_list(values, colors='one')
 
         fig_data = {
-            'pie': go.Pie(labels=index_names, values=values, marker_colors=colors, sort=False),
-            'bar': go.Bar(x=index_names, y=values, marker_color=colors)
+            'pie': go.Pie(labels=names, values=values, marker_colors=colors, sort=False),
+            'bar': go.Bar(x=names, y=values, marker_color=colors)
         }
 
         fig = go.Figure(data=fig_data[graph_type])

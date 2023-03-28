@@ -610,7 +610,9 @@ class TaxTools():
         min_salary = int(optimal_options.iloc[[0]]['Salary'])
         max_salary = int(optimal_options.iloc[[2]]['Salary'])
 
-        results = TaxTools.iterate_salaries(turnover, min_salary, max_salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, 1)
+        optimal_window = TaxTools.iterate_salaries(turnover, min_salary, max_salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, 1)
+        results = pd.concat([initial_scenarios, optimal_window]).drop_duplicates().reset_index(drop=True)
+
         
         if optimal:
                 results = TaxTools.optimal_take(results)
