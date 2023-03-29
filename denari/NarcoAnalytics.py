@@ -1,11 +1,8 @@
-import os
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
 import datetime as dt
 from .TaxTools import TaxTools as tax
 
-path = os.getcwd()
 class NarcoAnalytics():
     #APPEARANCE
     def color_list(category_list, colors='basic') -> list:

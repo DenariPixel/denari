@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import numpy as np
-import plotly.graph_objects as go
 import datetime as dt
 
 class TaxTools():
@@ -481,7 +480,7 @@ class TaxTools():
         """
         salary_taxes = TaxTools.salary_taxes(salary, tax_code, 'plan 0', tax_year).copy()
         turnover_minus_expenses = turnover - expenses
-        gross_profit = turnover - (expenses + salary)
+        gross_profit = turnover - expenses - salary - TaxTools.corporate_ni(salary, tax_year, tax_code)
         
         corp_tax = TaxTools.corporation_tax(gross_profit, tax_year)
         net_profit = gross_profit - corp_tax
