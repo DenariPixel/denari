@@ -48,7 +48,7 @@ class NarcoAnalytics():
         return unique_values
     
     #DATES/TIMES
-    def set_dates(df: pd.DataFrame, date_column='date', date_index=False) -> pd.DataFrame:
+    def dates_set_column(df: pd.DataFrame, date_column='date', date_index=False) -> pd.DataFrame:
         """
         Converts the specified date column to datetime objects, sorts the DataFrame by date, and optionally sets the date column as the index.
         
@@ -67,7 +67,7 @@ class NarcoAnalytics():
         
         return df
     
-    def split_dates(df: pd.DataFrame, date_column='date', format='period') -> pd.DataFrame:
+    def dates_split(df: pd.DataFrame, date_column='date', format='period') -> pd.DataFrame:
         """
         Splits the specified date column into different date components (tax year, year, quarter, month, week, day, and weekday) and adds them as new columns to the DataFrame.
 
@@ -103,7 +103,7 @@ class NarcoAnalytics():
 
         return df
 
-    def create_date_range(first_date, last_date="today", split_dates=True, split_format='named_numeric', date_index=False) -> pd.DataFrame:
+    def dates_create_range(first_date, last_date="today", split_dates=True, split_format='named_numeric', date_index=False) -> pd.DataFrame:
         """
         Creates a DataFrame containing a date range between first_date and last_date, with optional date component columns and date index.
 
@@ -126,7 +126,7 @@ class NarcoAnalytics():
 
         return date_range
 
-    def filter_date_range(data: pd.DataFrame, start_date, end_date) -> pd.DataFrame:
+    def dates_filter_range(data: pd.DataFrame, start_date, end_date) -> pd.DataFrame:
         """
         Filters the input DataFrame based on the given start_date and end_date. Assumes the DataFrame has a DateTimeIndex.
 
@@ -138,15 +138,7 @@ class NarcoAnalytics():
         date_range = (data.index > start_date) & (data.index <= end_date)
         return data[date_range]
     
-    def filter_date_range(df:pd.DataFrame, start_date, end_date, date_column='date'):
-        if date_column not in df.columns:
-            date_series = df.index
-        else:
-            date_series = df[date_column]
-        df = df[(date_series >= start_date) & (date_series <= end_date)]
-        return df
-    
-    def fill_dates(df: pd.DataFrame, date_column: str = 'date') -> pd.DataFrame:
+    def dates_fill_gaps(df: pd.DataFrame, date_column: str = 'date') -> pd.DataFrame:
         """
         Fill missing dates in the DataFrame with empty rows.
 
@@ -175,43 +167,6 @@ class NarcoAnalytics():
 
 
     #METRICS
-    def metric_n(df: pd.DataFrame, group_by: str, number_column: str, metric: str) -> pd.DataFrame:
-        """
-        Calculate the specified metric for a numerical column grouped by another column.
-
-        :param df: Input DataFrame
-        :param group_by: Column to group the data by
-        :param number_column: Column with numerical data to perform the metric calculation on
-        :param metric: Desired metric to calculate ('sum', 'mean', 'max', 'min', 'count')
-        :return: DataFrame with the calculated metric
-        """
-        metric_func = {
-            'sum': df.groupby(group_by)[number_column].sum(),
-            'mean': df.groupby(group_by)[number_column].mean(),
-            'max': df.groupby(group_by)[number_column].max(),
-            'min': df.groupby(group_by)[number_column].min(),
-            'count': df.groupby(group_by)[number_column].count(),
-        }
-        return metric_func[metric]
-
-    def metric_column_single(df: pd.DataFrame, column_name: str, metric: str = 'sum') -> float:
-        """
-        Calculate the specified metric for a single numerical column in a DataFrame.
-
-        :param df: Input DataFrame
-        :param column_name: Column with numerical data to perform the metric calculation on
-        :param metric: Desired metric to calculate ('sum', 'mean', 'max', 'min', 'count')
-        :return: Calculated metric value
-        """
-        metric_func = {
-            'sum': df[column_name].sum(),
-            'mean': df[column_name].mean(),
-            'max': df[column_name].max(),
-            'min': df[column_name].min(),
-            'count': df[column_name].count(),
-        }
-        return metric_func[metric]
-
     def metric_columns(df: pd.DataFrame, metric: str = 'sum') -> pd.DataFrame:
         """
         Calculate the specified metric for all numerical columns in a DataFrame.
@@ -374,27 +329,3 @@ class NarcoAnalytics():
         fig = go.Figure(data=fig_data[graph_type])
 
         return fig
-    
-    def metric(column: pd.Series, metric: str) -> float:
-        """
-        Calculate a specified metric for a given Pandas Series.
-
-        :param column: Input Pandas Series for which the metric should be calculated
-        :param metric: Metric to calculate, e.g., 'sum', 'mean', 'max', 'min', 'std', 'var', 'mode', 'count'
-        :return: The calculated metric value or a string indicating an error
-        """
-        metric_functions = {
-            'sum': column.sum,
-            'mean': column.mean,
-            'max': column.max,
-            'min': column.min,
-            'std': column.std,
-            'var': column.var,
-            'mode': column.mode,
-            'count': column.count
-        }
-
-        if metric in metric_functions:
-            return metric_functions[metric]()
-        else:
-            return 'error: incorrect metric input'
