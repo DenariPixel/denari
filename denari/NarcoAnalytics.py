@@ -319,7 +319,7 @@ class NarcoAnalytics():
         """
         names = df['column'].tolist()
         values = df['sum']
-        colors = NarcoAnalytics.color_list(values, colors='one')
+        colors = NarcoAnalytics.color_list(values.to_list(), colors='one')
 
         fig_data = {
             'pie': go.Pie(labels=names, values=values, marker_colors=colors, sort=False),
