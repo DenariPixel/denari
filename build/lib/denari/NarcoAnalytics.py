@@ -318,7 +318,7 @@ class NarcoAnalytics():
         :return: plotly.graph_objects.Figure containing the chart
         """
         names = df['column'].tolist()
-        values = df.iloc['sum']
+        values = df.iloc[:, 1]
         colors = NarcoAnalytics.color_list(values, colors='one')
 
         fig_data = {
