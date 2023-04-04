@@ -72,37 +72,6 @@ class TaxTools():
 
         return file_path
 
-
-    def get_law_SUPERSEDED(tax_name: str, tax_year: str = '2023/2024') -> pd.DataFrame:
-        """
-        Get tax law data for the given tax_name and tax_year.
-
-        Args:
-            tax_name (str): Tax law name. Options for UK tax_name:
-                - 'income tax'
-                - 'employee ni'
-                - 'corporate ni'
-                - 'dividend rates'
-                - 'student loans'
-                - 'corporation tax'
-                - 'employee ni bands'
-                - 'corporate ni bands'
-                - 'high income threshold'
-                - 'dividend tax free allowance'
-            tax_year (str): Tax year. Options are '2021/2022' and '2022/2023'. Default is '2021/2022'.
-
-        Returns:
-            pd.DataFrame: Tax law data as a DataFrame.
-        """
-        path = os.path.dirname(__file__)
-        log_folder = os.path.join(path, 'UK Tax Tables')
-        tax_table_log = pd.read_csv(os.path.join(log_folder, 'tax_name_log.csv'))
-        year = tax_table_log.loc[tax_table_log['tax name'] == tax_name, tax_year].item()
-        tax = tax_table_log.loc[tax_table_log['tax name'] == tax_name, 'filename'].item()
-        file_path = os.path.join(log_folder, year, tax)
-        tax_data = pd.read_csv(file_path)
-        return tax_data
-
     #Universal Tax Tools LEVEL 0
     def create_table(tax_rates: pd.DataFrame) -> pd.DataFrame:
         """

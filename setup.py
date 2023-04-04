@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='denari',
-    version='1.0.39',
+    version='1.0.40',
     description='DenariAnalytics OpenSource Business and Tax Tools',
     author='Fadil Karim',
     author_email='insights@denarianalytics.com',
