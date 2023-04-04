@@ -36,8 +36,44 @@ class TaxTools():
             dff['year'].astype(str) + '/' + dff['year_after'].astype(str)
         )
         return dff['tax_year']
+    
+    def get_law(tax_name: str, tax_year: str = '2023/2024', country='uk', custom_path: str = None, custom_filename: str = None) -> str:
+        """
+        Get the file path of the tax data for the given tax_name and tax_year.
 
-    def get_law(tax_name: str, tax_year: str = '2021/2022') -> pd.DataFrame:
+        Args:
+            tax_name (str): Tax law name.
+            tax_year (str): Tax year.
+            country (str, optional): Country code. Default is 'uk'.
+            custom_path (str, optional): Manual path for tax csv file folder. Default is None.
+            custom_filename (str, optional): Manual path for tax csv file. Default is None.
+
+        Returns:
+            str: File path of the tax data.
+        """
+        path = os.path.dirname(__file__)
+        file_name = {
+            'income tax': 'thresholds_income_tax.csv',
+            'employee ni': 'thresholds_employee_national_insurance.csv',
+            'corporate ni': 'thresholds_corporate_national_insurance.csv',
+            'dividend rates': 'rates_dividend.csv',
+            'student loans': 'thresholds_student_loans.csv',
+            'corporation tax': 'thresholds_corporation_tax.csv',
+            'employee ni bands': 'bands_employee_ni.csv',
+            'corporate ni bands': 'bands_corporate_ni.csv',
+            'high income threshold': 'single_threshold_allowance_change.csv',
+            'dividend tax free allowance': 'single_threshold_dividends_tax_free.csv'
+            }
+        tax_year_folder = tax_year.replace('/', '-')
+        file_path = os.path.join(path, 'UK Tax Tables', country, tax_year_folder, file_name[tax_name])
+
+        if custom_path and custom_filename is not None:
+            file_path = file_path = os.path.join(custom_path, custom_filename)
+
+        return file_path
+
+
+    def get_law_SUPERSEDED(tax_name: str, tax_year: str = '2023/2024') -> pd.DataFrame:
         """
         Get tax law data for the given tax_name and tax_year.
 
@@ -220,7 +256,7 @@ class TaxTools():
         a.loc[1, 'threshold min'] -= allowance_reduction
         a.loc[2, 'threshold min'] -= allowance_reduction
 
-        high_income_threshold = TaxTools.get_law('high income threshold', tax_year)
+        high_income_threshold = TaxTools.get_law('high income threshold', tax_year, country='uk')
         high_income_value = TaxTools.interpret_single_df_value(high_income_threshold)
 
         if salary > high_income_value:
@@ -313,9 +349,9 @@ class TaxTools():
         Returns:
             float: The calculated employee's NI contribution.
         """
-        ni_rates = TaxTools.get_law('employee ni', tax_year)
+        ni_rates = TaxTools.get_law('employee ni', tax_year, country='uk')
         ni_band = TaxTools.interpret_tax_code_ni_band(tax_code)
-        ni_bands = TaxTools.get_law('employee ni bands', tax_year)
+        ni_bands = TaxTools.get_law('employee ni bands', tax_year, country='uk')
         adjusted_ni_rates = TaxTools.adjust_ni_band(ni_rates, ni_bands, ni_band)
         ni_contribution = TaxTools.marginalise(salary, adjusted_ni_rates)
 
@@ -333,7 +369,7 @@ class TaxTools():
         Returns:
             float: The calculated income tax.
         """
-        income_tax_rates = TaxTools.get_law('income tax', tax_year)
+        income_tax_rates = TaxTools.get_law('income tax', tax_year, country='uk')
         tax_free_allowance = TaxTools.interpret_tax_code_allowance(tax_code)
         adjusted_income_tax_rates = TaxTools.adjust_allowance(salary, tax_free_allowance, income_tax_rates, tax_year)
         income_tax_amount = TaxTools.marginalise(salary, adjusted_income_tax_rates)
@@ -352,8 +388,8 @@ class TaxTools():
         Returns:
             float: The calculated corporate NI.
         """
-        corporate_ni_rates = TaxTools.get_law('corporate ni', tax_year)
-        corporate_ni_bands = TaxTools.get_law('corporate ni bands', tax_year)
+        corporate_ni_rates = TaxTools.get_law('corporate ni', tax_year, country='uk')
+        corporate_ni_bands = TaxTools.get_law('corporate ni bands', tax_year, country='uk')
         ni_band = TaxTools.interpret_tax_code_ni_band(tax_code)
         adjusted_corporate_ni_rates = TaxTools.adjust_ni_band(corporate_ni_rates, corporate_ni_bands, ni_band)
         corporate_ni_amount = TaxTools.marginalise(salary, adjusted_corporate_ni_rates)
@@ -371,7 +407,7 @@ class TaxTools():
         Returns:
             float: The calculated corporation tax.
         """
-        corporation_tax_rates = TaxTools.get_law('corporation tax', tax_year)
+        corporation_tax_rates = TaxTools.get_law('corporation tax', tax_year, country='uk')
         corporation_tax_amount = TaxTools.marginalise(gross_profit, corporation_tax_rates)
 
         return corporation_tax_amount
@@ -389,14 +425,14 @@ class TaxTools():
         Returns:
             float: The calculated dividend tax.
         """
-        income_tax_rates = TaxTools.get_law('income tax', tax_year)
+        income_tax_rates = TaxTools.get_law('income tax', tax_year, country='uk')
         tax_allowance = TaxTools.interpret_tax_code_allowance(tax_code)
         adjusted_income_tax_rates = TaxTools.adjust_allowance(salary, tax_allowance, income_tax_rates, tax_year)
         
-        dividend_rates = TaxTools.get_law('dividend rates', tax_year)
+        dividend_rates = TaxTools.get_law('dividend rates', tax_year, country='uk')
         adjusted_dividend_rates = TaxTools.replace_threshold_rates(adjusted_income_tax_rates, dividend_rates)
         
-        tax_free_allowance_df = TaxTools.get_law('dividend tax free allowance', tax_year)
+        tax_free_allowance_df = TaxTools.get_law('dividend tax free allowance', tax_year, country='uk')
         tax_free_allowance = TaxTools.interpret_single_df_value(tax_free_allowance_df)
         
         dividend_table = TaxTools.create_dividend_table(salary, tax_free_allowance, adjusted_dividend_rates)
@@ -418,7 +454,7 @@ class TaxTools():
         Returns:
             float: The calculated student loan repayment.
         """
-        student_loan_df = TaxTools.get_law('student loans', tax_year)
+        student_loan_df = TaxTools.get_law('student loans', tax_year, country='uk')
         student_loan_table = TaxTools.create_student_loan_table(student_loan_df, plan)
         student_loan_repayment = TaxTools.marginalise(cash, student_loan_table)
 

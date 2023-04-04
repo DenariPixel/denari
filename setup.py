@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='denari',
-    version='1.0.38',
+    version='1.0.39',
     description='DenariAnalytics OpenSource Business and Tax Tools',
     author='Fadil Karim',
     author_email='insights@denarianalytics.com',
@@ -14,7 +14,7 @@ setup(
         'dash'
     ],
     package_data={
-        'denari': ['UK Tax Tables/**/*']
+        'denari': ['Tax Tables/**/*']
     }
 
 )
