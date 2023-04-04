@@ -65,7 +65,7 @@ class TaxTools():
             'dividend tax free allowance': 'single_threshold_dividends_tax_free.csv'
             }
         tax_year_folder = tax_year.replace('/', '-')
-        file_path = os.path.join(path, 'UK Tax Tables', country, tax_year_folder, file_name[tax_name])
+        file_path = os.path.join(path, 'Tax Tables', country, tax_year_folder, file_name[tax_name])
 
         if custom_path and custom_filename is not None:
             file_path = file_path = os.path.join(custom_path, custom_filename)
