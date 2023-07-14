@@ -14,6 +14,7 @@ class NarcoAnalytics():
         :return: List of colors corresponding to the category_list, based on the specified color set
         """
         color_sets = {
+            'large': ['#f77189', '#f77277', '#f7745f', '#f87638', '#e98132', '#dc8932', '#d18e32', '#c79332', '#be9732', '#b69a32', '#ae9d31', '#a5a031', '#9ca231', '#92a531', '#86a831', '#77ab31', '#63ae31', '#42b231', '#32b252', '#33b16b', '#33b07a', '#34af86', '#34af8f', '#35ae97', '#35ad9e', '#36ada4', '#36acaa', '#37abb0', '#37abb7', '#37aabe', '#38a9c5', '#39a8ce', '#3aa6d9', '#3ba4e6', '#4aa0f4', '#6e9bf4', '#8795f4', '#9b8ff4', '#ac89f4', '#bc82f4', '#cc7af4', '#dc6ff4', '#ee61f4', '#f55ee9', '#f562da', '#f565cc', '#f668c0', '#f66ab3', '#f66ca7', '#f76e9a'],
             'basic': ['#FFA89E', '#A4DEF5', '#ACE1AD'],
             'one': ['#60FA5A', '#FF8791', '#75AEFA', '#FA69B9', '#9B70A4', '#FAF682', '#FACC75'],
             'profit': ['#60FA5A', '#FF8791', '#75AEFA'],
@@ -280,7 +281,7 @@ class NarcoAnalytics():
         result_df = result_df.sort_values(by=group_by)
         return result_df
     
-    def graph_index_columns(df: pd.DataFrame, colors: str = 'one', barmode: str = 'group') -> go.Figure:
+    def graph_index_columns(df: pd.DataFrame, colors: str = 'large', barmode: str = 'group') -> go.Figure:
         """
         Creates a grouped bar chart using a DataFrame with a PeriodIndex (specifically for monthly periods) or other index types.
 
