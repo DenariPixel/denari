@@ -281,14 +281,15 @@ class NarcoAnalytics():
         result_df = result_df.sort_values(by=group_by)
         return result_df
     
-    def graph_index_columns(df: pd.DataFrame, colors: str = 'large', barmode: str = 'group') -> go.Figure:
+    def graph_index_columns(df: pd.DataFrame, colors: str = 'large', barmode: str = 'group', chart_type: str = 'bar') -> go.Figure:
         """
-        Creates a grouped bar chart using a DataFrame with a PeriodIndex (specifically for monthly periods) or other index types.
+        Creates a grouped bar or line chart using a DataFrame with a PeriodIndex (specifically for monthly periods) or other index types.
 
-        :param df: Input DataFrame with index and columns to be used for the bar chart
+        :param df: Input DataFrame with index and columns to be used for the chart
         :param colors: Color set to use for the bars; default is 'one'
         :param barmode: Barmode for the plotly chart; default is 'group'
-        :return: plotly.graph_objects.Figure containing the bar chart
+        :param chart_type: Chart type for the plotly chart; default is 'bar'
+        :return: plotly.graph_objects.Figure containing the chart
         """
         if df.index.dtype == 'period[M]':
             df.index = df.index.strftime("%Y-%m").to_list()
@@ -297,14 +298,19 @@ class NarcoAnalytics():
         index_names = df.index.values.tolist()
         index_names = list(map(str, index_names))
 
-        colors = NarcoAnalytics.color_list(col_names, colors=colors)
-        bars = []
+        colors = narc.color_list(col_names, colors=colors)
+        chart_elements = []
 
         for i in col_names:
-            bar = go.Bar(name=i, x=index_names, y=df[i], marker_color=colors[col_names.index(i)])
-            bars.append(bar)
+            if chart_type == 'bar':
+                chart_element = go.Bar(name=i, x=index_names, y=df[i], marker_color=colors[col_names.index(i)])
+            elif chart_type == 'line':
+                chart_element = go.Scatter(name=i, x=index_names, y=df[i], marker_color=colors[col_names.index(i)])
+            else:
+                raise ValueError("Invalid chart_type. Expect 'bar' or 'line'.")
+            chart_elements.append(chart_element)
 
-        fig = go.Figure(bars)
+        fig = go.Figure(chart_elements)
         fig.update_layout(barmode=barmode)
 
         return fig
