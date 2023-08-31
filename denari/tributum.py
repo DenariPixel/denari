@@ -1,9 +1,8 @@
 import os
 import pandas as pd
 import numpy as np
-import datetime as dt
 
-class TaxTools():
+class tributum():
     def tax_year(df, country_code='uk'):
         """
         Creates a tax year pd.Series based on the provided DataFrame and country_code.

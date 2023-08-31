@@ -1,4 +1,4 @@
-from .NarcoAnalytics import NarcoAnalytics
-from .TaxTools import TaxTools
+from .analytica import analytica
+from .tributum import tributum
 
-__all__ = ['NarcoAnalytics', 'TaxTools']
+__all__ = ['analytica', 'tributum']

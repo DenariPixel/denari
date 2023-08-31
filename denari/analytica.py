@@ -1,9 +1,8 @@
 import pandas as pd
 import plotly.graph_objects as go
-import datetime as dt
-from .TaxTools import TaxTools as tax
+from .tributum import tributum as tax
 
-class NarcoAnalytics():
+class analytica():
     #APPEARANCE
     def color_list(category_list, colors='basic') -> list:
         """
