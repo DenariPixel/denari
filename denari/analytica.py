@@ -297,7 +297,7 @@ class analytica():
         index_names = df.index.values.tolist()
         index_names = list(map(str, index_names))
 
-        colors = NarcoAnalytics.color_list(col_names, colors=colors)
+        colors = analytica.color_list(col_names, colors=colors)
         chart_elements = []
 
         for i in col_names:
@@ -325,7 +325,7 @@ class analytica():
         """
         names = df['column'].tolist()
         values = df['sum'].tolist()
-        colors = NarcoAnalytics.color_list(values, colors='one')
+        colors = analytica.color_list(values, colors='one')
 
         fig_data = {
             'pie': go.Pie(labels=names, values=values, marker_colors=colors, sort=False),

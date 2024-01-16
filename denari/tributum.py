@@ -124,8 +124,8 @@ class tributum():
         Returns:
             float: The total marginal tax for the given cash amount.
         """
-        created_table = TaxTools.create_table(table)
-        total_tax = TaxTools.marginal(cash, created_table)
+        created_table = tributum.create_table(table)
+        total_tax = tributum.marginal(cash, created_table)
         return total_tax
 
     def replace_threshold_rates(threshold_table: pd.DataFrame, rates: pd.DataFrame) -> pd.DataFrame:
@@ -224,8 +224,8 @@ class tributum():
         a.loc[1, 'threshold min'] -= allowance_reduction
         a.loc[2, 'threshold min'] -= allowance_reduction
 
-        high_income_threshold = TaxTools.get_law('high income threshold', tax_year, country='uk')
-        high_income_value = TaxTools.interpret_single_df_value(high_income_threshold)
+        high_income_threshold = tributum.get_law('high income threshold', tax_year, country='uk')
+        high_income_value = tributum.interpret_single_df_value(high_income_threshold)
 
         if salary > high_income_value:
             change_range = high_income_value + 2 * tax_allowance
@@ -317,11 +317,11 @@ class tributum():
         Returns:
             float: The calculated employee's NI contribution.
         """
-        ni_rates = TaxTools.get_law('employee ni', tax_year, country='uk')
-        ni_band = TaxTools.interpret_tax_code_ni_band(tax_code)
-        ni_bands = TaxTools.get_law('employee ni bands', tax_year, country='uk')
-        adjusted_ni_rates = TaxTools.adjust_ni_band(ni_rates, ni_bands, ni_band)
-        ni_contribution = TaxTools.marginalise(salary, adjusted_ni_rates)
+        ni_rates = tributum.get_law('employee ni', tax_year, country='uk')
+        ni_band = tributum.interpret_tax_code_ni_band(tax_code)
+        ni_bands = tributum.get_law('employee ni bands', tax_year, country='uk')
+        adjusted_ni_rates = tributum.adjust_ni_band(ni_rates, ni_bands, ni_band)
+        ni_contribution = tributum.marginalise(salary, adjusted_ni_rates)
 
         return ni_contribution
 
@@ -337,10 +337,10 @@ class tributum():
         Returns:
             float: The calculated income tax.
         """
-        income_tax_rates = TaxTools.get_law('income tax', tax_year, country='uk')
-        tax_free_allowance = TaxTools.interpret_tax_code_allowance(tax_code)
-        adjusted_income_tax_rates = TaxTools.adjust_allowance(salary, tax_free_allowance, income_tax_rates, tax_year)
-        income_tax_amount = TaxTools.marginalise(salary, adjusted_income_tax_rates)
+        income_tax_rates = tributum.get_law('income tax', tax_year, country='uk')
+        tax_free_allowance = tributum.interpret_tax_code_allowance(tax_code)
+        adjusted_income_tax_rates = tributum.adjust_allowance(salary, tax_free_allowance, income_tax_rates, tax_year)
+        income_tax_amount = tributum.marginalise(salary, adjusted_income_tax_rates)
 
         return income_tax_amount
     
@@ -356,11 +356,11 @@ class tributum():
         Returns:
             float: The calculated corporate NI.
         """
-        corporate_ni_rates = TaxTools.get_law('corporate ni', tax_year, country='uk')
-        corporate_ni_bands = TaxTools.get_law('corporate ni bands', tax_year, country='uk')
-        ni_band = TaxTools.interpret_tax_code_ni_band(tax_code)
-        adjusted_corporate_ni_rates = TaxTools.adjust_ni_band(corporate_ni_rates, corporate_ni_bands, ni_band)
-        corporate_ni_amount = TaxTools.marginalise(salary, adjusted_corporate_ni_rates)
+        corporate_ni_rates = tributum.get_law('corporate ni', tax_year, country='uk')
+        corporate_ni_bands = tributum.get_law('corporate ni bands', tax_year, country='uk')
+        ni_band = tributum.interpret_tax_code_ni_band(tax_code)
+        adjusted_corporate_ni_rates = tributum.adjust_ni_band(corporate_ni_rates, corporate_ni_bands, ni_band)
+        corporate_ni_amount = tributum.marginalise(salary, adjusted_corporate_ni_rates)
 
         return corporate_ni_amount
 
@@ -375,8 +375,8 @@ class tributum():
         Returns:
             float: The calculated corporation tax.
         """
-        corporation_tax_rates = TaxTools.get_law('corporation tax', tax_year, country='uk')
-        corporation_tax_amount = TaxTools.marginalise(gross_profit, corporation_tax_rates)
+        corporation_tax_rates = tributum.get_law('corporation tax', tax_year, country='uk')
+        corporation_tax_amount = tributum.marginalise(gross_profit, corporation_tax_rates)
 
         return corporation_tax_amount
 
@@ -393,20 +393,20 @@ class tributum():
         Returns:
             float: The calculated dividend tax.
         """
-        income_tax_rates = TaxTools.get_law('income tax', tax_year, country='uk')
-        tax_allowance = TaxTools.interpret_tax_code_allowance(tax_code)
-        adjusted_income_tax_rates = TaxTools.adjust_allowance(salary, tax_allowance, income_tax_rates, tax_year)
+        income_tax_rates = tributum.get_law('income tax', tax_year, country='uk')
+        tax_allowance = tributum.interpret_tax_code_allowance(tax_code)
+        adjusted_income_tax_rates = tributum.adjust_allowance(salary, tax_allowance, income_tax_rates, tax_year)
         
-        dividend_rates = TaxTools.get_law('dividend rates', tax_year, country='uk')
-        adjusted_dividend_rates = TaxTools.replace_threshold_rates(adjusted_income_tax_rates, dividend_rates)
+        dividend_rates = tributum.get_law('dividend rates', tax_year, country='uk')
+        adjusted_dividend_rates = tributum.replace_threshold_rates(adjusted_income_tax_rates, dividend_rates)
         
-        tax_free_allowance_df = TaxTools.get_law('dividend tax free allowance', tax_year, country='uk')
-        tax_free_allowance = TaxTools.interpret_single_df_value(tax_free_allowance_df)
+        tax_free_allowance_df = tributum.get_law('dividend tax free allowance', tax_year, country='uk')
+        tax_free_allowance = tributum.interpret_single_df_value(tax_free_allowance_df)
         
-        dividend_table = TaxTools.create_dividend_table(salary, tax_free_allowance, adjusted_dividend_rates)
+        dividend_table = tributum.create_dividend_table(salary, tax_free_allowance, adjusted_dividend_rates)
         total_income = salary + dividend
         
-        dividend_tax_amount = TaxTools.marginalise(total_income, dividend_table)
+        dividend_tax_amount = tributum.marginalise(total_income, dividend_table)
 
         return dividend_tax_amount
 
@@ -422,9 +422,9 @@ class tributum():
         Returns:
             float: The calculated student loan repayment.
         """
-        student_loan_df = TaxTools.get_law('student loans', tax_year, country='uk')
-        student_loan_table = TaxTools.create_student_loan_table(student_loan_df, plan)
-        student_loan_repayment = TaxTools.marginalise(cash, student_loan_table)
+        student_loan_df = tributum.get_law('student loans', tax_year, country='uk')
+        student_loan_table = tributum.create_student_loan_table(student_loan_df, plan)
+        student_loan_repayment = tributum.marginalise(cash, student_loan_table)
 
         return student_loan_repayment
 
@@ -443,11 +443,11 @@ class tributum():
         Returns:
             pd.DataFrame: A DataFrame containing the calculated taxes and other relevant information.
         """
-        employee_ni = TaxTools.employee_ni(salary, tax_year, tax_code)
-        income_tax = TaxTools.income_tax(salary, tax_year, tax_code)
-        corporate_ni = TaxTools.corporate_ni(salary, tax_year, tax_code)
-        student_loans_primary = TaxTools.student_loans(salary, student_loan_plan, tax_year)
-        student_loans_secondary = TaxTools.student_loans(salary, student_loan_second_plan, tax_year)
+        employee_ni = tributum.employee_ni(salary, tax_year, tax_code)
+        income_tax = tributum.income_tax(salary, tax_year, tax_code)
+        corporate_ni = tributum.corporate_ni(salary, tax_year, tax_code)
+        student_loans_primary = tributum.student_loans(salary, student_loan_plan, tax_year)
+        student_loans_secondary = tributum.student_loans(salary, student_loan_second_plan, tax_year)
         
         total_student_loans = student_loans_primary + student_loans_secondary
         salary_takehome = salary - employee_ni - income_tax - total_student_loans
@@ -482,19 +482,19 @@ class tributum():
         Returns:
             pd.DataFrame: A DataFrame containing the calculated take-home and other relevant information.
         """
-        salary_taxes = TaxTools.salary_taxes(salary, tax_code, 'plan 0', tax_year).copy()
+        salary_taxes = tributum.salary_taxes(salary, tax_code, 'plan 0', tax_year).copy()
         turnover_minus_expenses = turnover - expenses
-        gross_profit = turnover - expenses - salary - TaxTools.corporate_ni(salary, tax_year, tax_code)
+        gross_profit = turnover - expenses - salary - tributum.corporate_ni(salary, tax_year, tax_code)
         
-        corp_tax = TaxTools.corporation_tax(gross_profit, tax_year)
+        corp_tax = tributum.corporation_tax(gross_profit, tax_year)
         net_profit = gross_profit - corp_tax
         gross_take = salary + net_profit
         
-        dividend_tax = TaxTools.dividend_tax(salary, net_profit, tax_year, tax_code)
+        dividend_tax = tributum.dividend_tax(salary, net_profit, tax_year, tax_code)
         dividend_takehome = net_profit - dividend_tax
         
-        primary_student_loans = TaxTools.student_loans(gross_take, student_loan_plan, tax_year)
-        secondary_student_loans = TaxTools.student_loans(gross_take, student_loan_second_plan, tax_year)
+        primary_student_loans = tributum.student_loans(gross_take, student_loan_plan, tax_year)
+        secondary_student_loans = tributum.student_loans(gross_take, student_loan_second_plan, tax_year)
         total_student_loans = primary_student_loans + secondary_student_loans
         
         salary_taxes['Student Loans'] = total_student_loans
@@ -553,7 +553,7 @@ class tributum():
         results = pd.DataFrame()
 
         for salary in range(min_salary, max_salary + 1, iteration_step):
-            salary_data = TaxTools.ltd_full_take(turnover, salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan)
+            salary_data = tributum.ltd_full_take(turnover, salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan)
             results = pd.concat([results, salary_data])
 
         results = results.reset_index(drop=True)
@@ -576,10 +576,10 @@ class tributum():
             pd.DataFrame: A DataFrame containing the calculated take-home and other relevant information for each salary level from 0 up to the turnover value minus expenses.
         """
         turnover_deduct_expenses = turnover - expenses
-        results = TaxTools.iterate_salaries(turnover, 0, turnover_deduct_expenses, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, iteration_step=1)
+        results = tributum.iterate_salaries(turnover, 0, turnover_deduct_expenses, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, iteration_step=1)
        
         if optimal:
-            results = TaxTools.optimal_take(results)
+            results = tributum.optimal_take(results)
 
         return results
 
@@ -603,9 +603,9 @@ class tributum():
             pd.DataFrame: A DataFrame containing the optimal take-home scenario(s) with the highest take-home value.
         """
         turnover_deduct_expenses = turnover - expenses
-        iteration_step = TaxTools.optimal_iterations(turnover_deduct_expenses)
+        iteration_step = tributum.optimal_iterations(turnover_deduct_expenses)
 
-        initial_scenarios = TaxTools.iterate_salaries(turnover, 0, turnover_deduct_expenses, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, iteration_step)
+        initial_scenarios = tributum.iterate_salaries(turnover, 0, turnover_deduct_expenses, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, iteration_step)
         optimal_row = initial_scenarios.index[initial_scenarios['Total Takehome'] == initial_scenarios['Total Takehome'].max()].tolist()
         optimal_range = [*range(optimal_row[0] - 1, optimal_row[0] + 2)]
         optimal_options = initial_scenarios.iloc[optimal_range]
@@ -613,11 +613,11 @@ class tributum():
         min_salary = int(optimal_options.iloc[[0]]['Salary'])
         max_salary = int(optimal_options.iloc[[2]]['Salary'])
 
-        optimal_window = TaxTools.iterate_salaries(turnover, min_salary, max_salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, 1)
+        optimal_window = tributum.iterate_salaries(turnover, min_salary, max_salary, expenses, tax_year, tax_code, student_loan_plan, student_loan_second_plan, 1)
         results = pd.concat([initial_scenarios, optimal_window]).drop_duplicates().reset_index(drop=True)
 
         
         if optimal:
-                results = TaxTools.optimal_take(results)
+                results = tributum.optimal_take(results)
 
         return results
